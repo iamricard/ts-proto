@@ -15,6 +15,7 @@ describe("options", () => {
         "exportCommonSymbols": true,
         "fileSuffix": "",
         "forceLong": "number",
+        "importMappings": Object {},
         "importSuffix": "",
         "initializeFieldsAsUndefined": false,
         "lowerCaseServiceMethods": true,
@@ -113,6 +114,13 @@ describe("options", () => {
     const options = optionsFromParameter("outputJsonMethods=false,outputEncodeMethods=false,outputClientImpl=false");
     expect(options).toMatchObject({
       onlyTypes: true,
+    });
+  });
+
+  it("can set importMappings", () => {
+    const options = optionsFromParameter("M=./google/protobuf/empty=./external/protobufapis/google/protobuf/empty");
+    expect(options).toMatchObject({
+      importMappings: { "./google/protobuf/empty": "./external/protobufapis/google/protobuf/empty" },
     });
   });
 

@@ -15,15 +15,15 @@
 - [QuickStart](#quickstart)
   - [Buf](#buf)
 - [Goals](#goals)
+  - [Non-Goals](#non-goals)
 - [Example Types](#example-types)
 - [Highlights](#highlights)
 - [Auto-Batching / N+1 Prevention](#auto-batching--n1-prevention)
 - [Usage](#usage)
-  - [Supported options](#supported-options)
-  - [Only Types](#only-types)
-  - [NestJS Support](#nestjs-support)
-  - [Watch Mode](#watch-mode)
-  - [Basic gRPC implementation](#basic-grpc-implementation)
+    - [Supported options](#supported-options)
+    - [NestJS Support](#nestjs-support)
+    - [Watch Mode](#watch-mode)
+    - [Basic gRPC implementation](#basic-grpc-implementation)
 - [Sponsors](#sponsors)
 - [Development](#development)
 - [Assumptions](#assumptions)
@@ -115,7 +115,7 @@ plugins:
     out: ../gen/ts
     opt:
       - outputServices=...
-      - useExactTypes=...    
+      - useExactTypes=...
 ```
 
 # Goals
@@ -300,33 +300,33 @@ Generated code will be placed in the Gradle build directory.
 - With `--ts_proto_opt=useOptionals=messages` (for message fields) or `--ts_proto_opt=useOptionals=all` (for message and scalar fields), fields are declared as optional keys, e.g. `field?: Message` instead of the default `field: Message | undefined`.
 
   ts-proto defaults to `useOptionals=none` because it:
-  
+
   1. Prevents typos when initializing messages, and
   2. Provides the most consistent API to readers
-  3. Ensures production messages are properly initialized with all fields. 
+  3. Ensures production messages are properly initialized with all fields.
 
-  For typo prevention, optional fields make it easy for extra fields to slip into a message (until we get [Exact Types](https://github.com/microsoft/TypeScript/issues/12936)),  i.e.:
+  For typo prevention, optional fields make it easy for extra fields to slip into a message (until we get [Exact Types](https://github.com/microsoft/TypeScript/issues/12936)), i.e.:
 
-   ```typescript
-   interface SomeMessage {
-     firstName: string | undefined;
-     lastName: string | undefined;
-   }
-   // Declared with a typo
-   const data = { firstName: 'a', lastTypo: 'b' };
-   // With useOptionals=none, this correctly fails to compile; if `lastName` was optional, it would not
-   const message: SomeMessage = { ...data };
-   ```
-  
-   For a consistent API, if `SomeMessage.lastName` is optional `lastName?`, then readers have to check _two_ empty conditions: a) is `lastName` `undefined` (b/c it was created in-memory and left unset), or b) is `lastName` empty string (b/c we read `SomeMessage` off the wire and correctly set `lastName` to empty string)?
+  ```typescript
+  interface SomeMessage {
+    firstName: string | undefined;
+    lastName: string | undefined;
+  }
+  // Declared with a typo
+  const data = { firstName: "a", lastTypo: "b" };
+  // With useOptionals=none, this correctly fails to compile; if `lastName` was optional, it would not
+  const message: SomeMessage = { ...data };
+  ```
 
-   For ensuring proper initialization, if later `SomeMessage.middleInitial` is added, but it's marked as optional `middleInitial?`, you may have many call sites in production code that _should_ now be passing `middleInitial` to create a valid `SomeMessage`, but are not.
+  For a consistent API, if `SomeMessage.lastName` is optional `lastName?`, then readers have to check _two_ empty conditions: a) is `lastName` `undefined` (b/c it was created in-memory and left unset), or b) is `lastName` empty string (b/c we read `SomeMessage` off the wire and correctly set `lastName` to empty string)?
 
-   So, between typo-prevention, reader inconsistency, and proper initialization, ts-proto recommends using `useOptionals=none` as the "most safe" option.
+  For ensuring proper initialization, if later `SomeMessage.middleInitial` is added, but it's marked as optional `middleInitial?`, you may have many call sites in production code that _should_ now be passing `middleInitial` to create a valid `SomeMessage`, but are not.
 
-   All that said, this approach does require writers/creators to set every field (although `fromPartial` is meant to address this), so if you still want to have optional fields, you can set `useOptionals=messages` or `useOptionals=all`.
+  So, between typo-prevention, reader inconsistency, and proper initialization, ts-proto recommends using `useOptionals=none` as the "most safe" option.
 
-   (See [this issue](https://github.com/stephenh/ts-proto/issues/120#issuecomment-678375833) and [this issue](https://github.com/stephenh/ts-proto/issues/397#issuecomment-977259118) for discussions on `useOptional`.)
+  All that said, this approach does require writers/creators to set every field (although `fromPartial` is meant to address this), so if you still want to have optional fields, you can set `useOptionals=messages` or `useOptionals=all`.
+
+  (See [this issue](https://github.com/stephenh/ts-proto/issues/120#issuecomment-678375833) and [this issue](https://github.com/stephenh/ts-proto/issues/397#issuecomment-977259118) for discussions on `useOptional`.)
 
 - With `--ts_proto_opt=exportCommonSymbols=false`, utility types like `DeepPartial` won't be `export`d.
 
@@ -346,11 +346,11 @@ Generated code will be placed in the Gradle build directory.
 
   `snakeToCamel` can also be set as a `_`-delimited list of strings (comma is reserved as the flag delimited), i.e. `--ts_proto_opt=snakeToCamel=keys_json`, where including `keys` will make message keys be camel case and including `json` will make JSON keys be camel case.
 
-   Empty string, i.e. `snakeToCamel=`, will keep both messages keys and `JSON` keys as snake case (it is the same as `snakeToCamel=false`).
+  Empty string, i.e. `snakeToCamel=`, will keep both messages keys and `JSON` keys as snake case (it is the same as `snakeToCamel=false`).
 
-   Note that to use the `json_name` attribute, you'll have to use the `json`.
+  Note that to use the `json_name` attribute, you'll have to use the `json`.
 
-   The default behavior is `keys_json`, i.e. both will be camel cased, and `json_name` will be used if set.
+  The default behavior is `keys_json`, i.e. both will be camel cased, and `json_name` will be used if set.
 
 - With `--ts_proto_opt=outputEncodeMethods=false`, the `Message.encode` and `Message.decode` methods for working with protobuf-encoded/binary data will not be output.
 
@@ -443,12 +443,13 @@ Generated code will be placed in the Gradle build directory.
 
 - With `--ts_proto_opt=useJsonWireFormat=true`, the generated code will reflect the JSON representation of Protobuf messages.
 
-  Requires `onlyTypes=true`. Implies `useDate=string` and `stringEnums=true`. This option is to generate types that can be directly used with marshalling/unmarshalling Protobuf messages serialized as JSON.  
+  Requires `onlyTypes=true`. Implies `useDate=string` and `stringEnums=true`. This option is to generate types that can be directly used with marshalling/unmarshalling Protobuf messages serialized as JSON.
   You may also want to set `useOptionals=all`, as gRPC gateways are not required to send default value for scalar values.
 
 - With `--ts_proto_opt=useNumericEnumForJson=true`, the JSON converter (`toJSON`) will encode enum values as int, rather than a string literal.
 
 - With `--ts_proto_opt=initializeFieldsAsUndefined=false`, all optional field initializers will be omited from the generated base instances.
+- With `--ts_proto_opt=M=./google/protobuf/empty=./google3/protobuf/empty`, ('M' means 'importMapping', similar to protoc-gen-go), the generated code import path for `google/protobuf/empty.ts` will reflect the overridden value.
 
 ### NestJS Support
 
@@ -606,7 +607,7 @@ We recommend using the `oneof=unions` option, which will change the output to be
 
 ```typescript
 interface YourMessage {
-  eitherField: { $case: 'field_a'; field_a: string } | { $case: 'field_b'; field_b: string };
+  eitherField: { $case: "field_a"; field_a: string } | { $case: "field_b"; field_b: string };
 }
 ```
 
@@ -639,7 +640,7 @@ Foo.decode(protobufBytes); // => { bar: '' }
 ```
 
 ```typescript
-Foo.encode({ bar: '' }); // => { }, writes an empty Foo object, in protobuf binary format
+Foo.encode({ bar: "" }); // => { }, writes an empty Foo object, in protobuf binary format
 ```
 
 **fromJSON / toJSON**
@@ -648,8 +649,8 @@ Reading JSON will also initialize the default values. Since senders may either o
 
 ```typescript
 Foo.fromJSON({}); // => { bar: '' }
-Foo.fromJSON({ bar: '' }); // => { bar: '' }
-Foo.fromJSON({ bar: 'baz' }); // => { bar: 'baz' }
+Foo.fromJSON({ bar: "" }); // => { bar: '' }
+Foo.fromJSON({ bar: "baz" }); // => { bar: 'baz' }
 ```
 
 When writing JSON, `ts-proto` currently does **not** normalize message when converting to JSON, other than omitting unset fields, but it may do so in the future.
@@ -658,16 +659,16 @@ When writing JSON, `ts-proto` currently does **not** normalize message when conv
 // Current ts-proto behavior
 Foo.toJSON({}); // => { }
 Foo.toJSON({ bar: undefined }); // => { }
-Foo.toJSON({ bar: '' }); // => { bar: '' } - note: this is the default value, but it's not omitted
-Foo.toJSON({ bar: 'baz' }); // => { bar: 'baz' }
+Foo.toJSON({ bar: "" }); // => { bar: '' } - note: this is the default value, but it's not omitted
+Foo.toJSON({ bar: "baz" }); // => { bar: 'baz' }
 ```
 
 ```typescript
 // Possible future behavior, where ts-proto would normalize message
 Foo.toJSON({}); // => { }
 Foo.toJSON({ bar: undefined }); // => { }
-Foo.toJSON({ bar: '' }); // => { } - note: omitting the default value, as expected
-Foo.toJSON({ bar: 'baz' }); // => { bar: 'baz' }
+Foo.toJSON({ bar: "" }); // => { } - note: omitting the default value, as expected
+Foo.toJSON({ bar: "baz" }); // => { bar: 'baz' }
 ```
 
 - Please open an issue if you need this behavior.
@@ -723,13 +724,13 @@ interface ExampleMessage {
 When encoding a message the primitive value is converted back to its corresponding wrapper type:
 
 ```typescript
-ExampleMessage.encode({ name: 'foo' }); // => { name: { value: 'foo' } }, in binary
+ExampleMessage.encode({ name: "foo" }); // => { name: { value: 'foo' } }, in binary
 ```
 
 When calling toJSON, the value is not converted, because wrapper types are idiomatic in JSON.
 
 ```typescript
-ExampleMessage.toJSON({ name: 'foo' }); // => { name: 'foo' }
+ExampleMessage.toJSON({ name: "foo" }); // => { name: 'foo' }
 ```
 
 ## JSON Types (Struct Types)
@@ -771,7 +772,7 @@ interface ExampleMessage {
 Encoding a JSON value embedded in a message, converts it to a Struct Type:
 
 ```typescript
-ExampleMessage.encode({ anything: { name: 'hello' } });
+ExampleMessage.encode({ anything: { name: "hello" } });
 /* Outputs the following structure, encoded in protobuf binary format:
 {
   anything: Value {
